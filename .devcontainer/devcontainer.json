@@ -11,7 +11,7 @@
     "vscode": {
       "extensions": [
         "mskelton.npm-outdated",
-        "esbenp.prettier-vscode",
+        "oxc.oxc-vscode",
         "eamodio.gitlens",
         "wix.vscode-import-cost",
         "gruntfuggly.todo-tree",
@@ -22,9 +22,8 @@
         "files.autoSave": "afterDelay",
         "files.autoSaveDelay": 1000,
         "editor.formatOnSave": true,
-        "editor.defaultFormatter": "esbenp.prettier-vscode",
-        "prettier.configPath": "/workspace/.prettierrc",
-        "prettier.ignorePath": "/workspace/.prettierignore"
+        "editor.defaultFormatter": "oxc.oxc-vscode",
+        "oxc.fmt.configPath": "/workspace/.oxfmtrc.json"
       }
     }
   }
