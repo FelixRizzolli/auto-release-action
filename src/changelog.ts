@@ -31,7 +31,7 @@ export function extractChangelog(changelogPath: string, version: string): string
 
     // Find the next header (next version section)
     const nextHeaderIndex = lines.findIndex((line, idx) => {
-        return idx > startLineIndex && /^## /.test(line);
+        return idx > startLineIndex && line.startsWith('## ');
     });
 
     // Extract content between this version and next version (or end of file)

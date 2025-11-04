@@ -9,8 +9,11 @@ export async function getCurrentVersion(packageJsonPath: string): Promise<string
     try {
         const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
         return packageJson.version || '';
-    } catch (error) {
-        throw new Error(`Failed to read version from ${packageJsonPath}: ${error}`);
+    } catch (error: unknown) {
+        throw new Error(
+            `Failed to read version from ${packageJsonPath}: ${String(error)}`,
+            { cause: error }
+        );
     }
 }
 
@@ -113,7 +116,10 @@ export async function getPackageFromTag(tagName: string, packageJsonPath: string
     });
 
     if (exitCode !== 0) {
-        throw new Error(`Failed to get package.json from tag ${tagName}: ${error}`);
+        throw new Error(
+            `Failed to get package.json from tag ${tagName}: ${error}`,
+            { cause: error }
+        );
     }
 
     return output;
