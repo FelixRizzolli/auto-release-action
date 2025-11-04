@@ -1,8 +1,0 @@
-dist
-lib
-coverage
-.vscode/settings.json
-.pnpm-store
-public
-node_modules
-.pnpm-lock.yaml

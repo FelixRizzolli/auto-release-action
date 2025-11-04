@@ -24,6 +24,9 @@ importers:
       '@vercel/ncc':
         specifier: ^0.38.4
         version: 0.38.4
+      oxfmt:
+        specifier: ^0.9.0
+        version: 0.9.0
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -97,6 +100,46 @@ packages:
   '@octokit/types@13.10.0':
     resolution: {integrity: sha512-ifLaO34EbbPj0Xgro4G5lP5asESjwHracYJvVaPIyXMuiuXLlhic3S47cBdTb+jfODkTE5YtGCLt3Ay3+J97sA==}
 
+  '@oxfmt/darwin-arm64@0.9.0':
+    resolution: {integrity: sha512-1D9z55GMMqceq3VT0rNVQjBGanXvwMoNUmkDyXxcigfu+qSVt+qmcJbZwttJfGx9GSlR+ilnAxHODLdcfSShMQ==}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@oxfmt/darwin-x64@0.9.0':
+    resolution: {integrity: sha512-WI/2AsQz058vcpPCcLk3R5gFBlS3kWrzZGGlZq8UljB8Jzn8/OH6+UEZxiDsFJd/ilbBxPpgAgPxna3z8Is4bw==}
+    cpu: [x64]
+    os: [darwin]
+
+  '@oxfmt/linux-arm64-gnu@0.9.0':
+    resolution: {integrity: sha512-Sj/mbXJZ1vtCvGcmond5zfW69TA1xFLkDl99aje4JazyMsrEK1PdknJClFKfVIBVPNzxfWa/DixAjFzbJoNQ7A==}
+    cpu: [arm64]
+    os: [linux]
+
+  '@oxfmt/linux-arm64-musl@0.9.0':
+    resolution: {integrity: sha512-t1+MPQ6xkw6Xy0aNsviunHqnUWKrUgIskR+x4OLUSs+ZxzS2HPqTrYzQJWJp/2wq4lHpF4NsfNBkmXq751YA6A==}
+    cpu: [arm64]
+    os: [linux]
+
+  '@oxfmt/linux-x64-gnu@0.9.0':
+    resolution: {integrity: sha512-/jn3JBBFZb3rw0L+ZazDi757a7/fsI7bxHKUeSLegt4Jlu3EvG1h+zMG5ETsVE0f8ULAuwjsYA/ujGOQxzHRNQ==}
+    cpu: [x64]
+    os: [linux]
+
+  '@oxfmt/linux-x64-musl@0.9.0':
+    resolution: {integrity: sha512-K10t6rNnogmytxbBmdcJnZnSH34kMvTbKI7Kyi0AKv9v7hKUm1kE9hq9VmNyo0KLuu+YYDIMxmQ3Mm5DY2wLyg==}
+    cpu: [x64]
+    os: [linux]
+
+  '@oxfmt/win32-arm64@0.9.0':
+    resolution: {integrity: sha512-IaVN68uowQThhSkbtfKo9Hm4I/y3WHom115tYUXeR6NMi/JDTrBpcrF7v0Tg6b6LbpT6LeXSYVr2cO2IVQwF5A==}
+    cpu: [arm64]
+    os: [win32]
+
+  '@oxfmt/win32-x64@0.9.0':
+    resolution: {integrity: sha512-77OiFJ9lpc7ICmHMSN+belxHPDMOu9U7N/LEp40YuC219QWClt6E5Ved6GwNV5bsDCTxTrpH1/3LhxBNKC66Xg==}
+    cpu: [x64]
+    os: [win32]
+
   '@types/node@24.10.0':
     resolution: {integrity: sha512-qzQZRBqkFsYyaSWXuEHc2WR9c0a0CXwiE5FWUvn7ZM+vdy1uZLfCunD38UzhuB7YN/J11ndbDBcTmOdxJo9Q7A==}
 
@@ -112,6 +155,11 @@ packages:
 
   once@1.4.0:
     resolution: {integrity: sha512-lNaJgI+2Q5URQBkccEKHTQOPaXdUxnZZElQTZY0MFUAuaEqe1E+Nyvgdz/aIyNi6Z9MzO5dv1H8n58/GELp3+w==}
+
+  oxfmt@0.9.0:
+    resolution: {integrity: sha512-RVMw8kqZjCDCFxBZyDK4VW8DHxmSHV0pRky7LoLq9JL3ge4kelT0UB8GS0nVTZIteqOJ9rfwPxSZRUVXSX/n0w==}
+    engines: {node: ^20.19.0 || >=22.12.0}
+    hasBin: true
 
   tunnel@0.0.6:
     resolution: {integrity: sha512-1h/Lnq9yajKY2PEbBadPXj3VxsDDu844OnaAo52UVmIzIvwwtBPIuNvkjuzBlTWpfJyUbG3ez0KSBibQkj4ojg==}
@@ -223,6 +271,30 @@ snapshots:
     dependencies:
       '@octokit/openapi-types': 24.2.0
 
+  '@oxfmt/darwin-arm64@0.9.0':
+    optional: true
+
+  '@oxfmt/darwin-x64@0.9.0':
+    optional: true
+
+  '@oxfmt/linux-arm64-gnu@0.9.0':
+    optional: true
+
+  '@oxfmt/linux-arm64-musl@0.9.0':
+    optional: true
+
+  '@oxfmt/linux-x64-gnu@0.9.0':
+    optional: true
+
+  '@oxfmt/linux-x64-musl@0.9.0':
+    optional: true
+
+  '@oxfmt/win32-arm64@0.9.0':
+    optional: true
+
+  '@oxfmt/win32-x64@0.9.0':
+    optional: true
+
   '@types/node@24.10.0':
     dependencies:
       undici-types: 7.16.0
@@ -236,6 +308,17 @@ snapshots:
   once@1.4.0:
     dependencies:
       wrappy: 1.0.2
+
+  oxfmt@0.9.0:
+    optionalDependencies:
+      '@oxfmt/darwin-arm64': 0.9.0
+      '@oxfmt/darwin-x64': 0.9.0
+      '@oxfmt/linux-arm64-gnu': 0.9.0
+      '@oxfmt/linux-arm64-musl': 0.9.0
+      '@oxfmt/linux-x64-gnu': 0.9.0
+      '@oxfmt/linux-x64-musl': 0.9.0
+      '@oxfmt/win32-arm64': 0.9.0
+      '@oxfmt/win32-x64': 0.9.0
 
   tunnel@0.0.6: {}
 

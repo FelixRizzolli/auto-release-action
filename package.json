@@ -5,6 +5,9 @@
     "main": "dist/index.js",
     "scripts": {
         "build": "tsc && ncc build lib/index.js -o dist --source-map --license licenses.txt",
+        "type-check": "tsc --noEmit",
+        "format": "oxfmt src",
+        "format:check": "oxfmt --check src",
         "test": "echo \"Error: no test specified\" && exit 1"
     },
     "keywords": [
@@ -24,6 +27,7 @@
     "devDependencies": {
         "@types/node": "^24.10.0",
         "@vercel/ncc": "^0.38.4",
+        "oxfmt": "^0.9.0",
         "typescript": "^5.9.3"
     }
 }
