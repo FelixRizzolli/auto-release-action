@@ -23,9 +23,13 @@
         "files.autoSaveDelay": 1000,
         "editor.formatOnSave": true,
         "editor.defaultFormatter": "oxc.oxc-vscode",
-        "oxc.requireConfig": true,
         "oxc.tsConfigPath": "/workspace/tsconfig.json",
-        "oxc.fmt.configPath": "/workspace/.oxfmtrc.json"
+        "oxc.fmt.configPath": "/workspace/.oxfmtrc.json",
+        "oxc.lint.run": "onType",
+        "oxc.requireConfig": true,
+        "oxc.configPath": "/workspace/.oxlintrc.json",
+        "oxc.unusedDisableDirectives": "deny",
+        "oxc.typeAware": true
       }
     }
   }
