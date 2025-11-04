@@ -4,6 +4,87 @@ import * as fs from 'fs';
 import { getCurrentVersion, getLatestVersionTag, tagExists, extractVersionFromTag, createGitTag } from './version';
 import { extractChangelog } from './changelog';
 
+/**
+ * Result of determining whether to create a release (pure business logic)
+ */
+interface ReleaseDecision {
+    versionChanged: boolean;
+    shouldCreateRelease: boolean;
+    newTagName: string;
+    currentVersion: string;
+    latestVersion?: string;
+}
+
+/**
+ * Determine if a release should be created based on version comparison (pure function)
+ * @param currentVersion - Current version from package.json
+ * @param latestTag - Latest git tag (or null if none exists)
+ * @param tagPrefix - Prefix for tags (e.g., "v")
+ * @param tagAlreadyExists - Whether the new tag already exists
+ * @returns Decision object with version info and whether to create release
+ */
+export function determineReleaseDecision(
+    currentVersion: string,
+    latestTag: string | null,
+    tagPrefix: string,
+    tagAlreadyExists: boolean,
+): ReleaseDecision {
+    const newTagName = `${tagPrefix}${currentVersion}`;
+
+    // First release - no previous tags
+    if (!latestTag) {
+        return {
+            versionChanged: true,
+            shouldCreateRelease: true,
+            newTagName,
+            currentVersion,
+        };
+    }
+
+    const latestVersion = extractVersionFromTag(latestTag, tagPrefix);
+
+    // Version hasn't changed
+    if (currentVersion === latestVersion) {
+        return {
+            versionChanged: false,
+            shouldCreateRelease: false,
+            newTagName,
+            currentVersion,
+            latestVersion,
+        };
+    }
+
+    // Version changed but tag already exists
+    if (tagAlreadyExists) {
+        return {
+            versionChanged: true,
+            shouldCreateRelease: false,
+            newTagName,
+            currentVersion,
+            latestVersion,
+        };
+    }
+
+    // Version changed and tag doesn't exist - create release
+    return {
+        versionChanged: true,
+        shouldCreateRelease: true,
+        newTagName,
+        currentVersion,
+        latestVersion,
+    };
+}
+
+/**
+ * Get changelog content with fallback to default message (pure function)
+ * @param changelogContent - Extracted changelog content (may be empty)
+ * @param version - Version number for fallback message
+ * @returns Changelog content or default message
+ */
+export function getChangelogWithFallback(changelogContent: string, version: string): string {
+    return changelogContent || `Release ${version}`;
+}
+
 async function run(): Promise<void> {
     try {
         // Get inputs
@@ -41,29 +122,24 @@ async function run(): Promise<void> {
         // Get the latest version tag
         const latestTag = await getLatestVersionTag(tagPrefix);
 
-        let versionChanged = false;
-        let shouldCreateRelease = false;
+        // Check if the new tag already exists
         const newTagName = `${tagPrefix}${currentVersion}`;
+        const tagAlreadyExists = await tagExists(newTagName);
 
+        // Determine if we should create a release (pure business logic)
+        const decision = determineReleaseDecision(currentVersion, latestTag, tagPrefix, tagAlreadyExists);
+
+        // Log decision details
         if (!latestTag) {
             core.info('🎉 No previous tags found, this will be the first release!');
-            versionChanged = true;
-            shouldCreateRelease = true;
-        } else {
-            const latestVersion = extractVersionFromTag(latestTag, tagPrefix);
-            core.info(`🔖 Latest tagged version: ${latestVersion}`);
+        } else if (decision.latestVersion) {
+            core.info(`🔖 Latest tagged version: ${decision.latestVersion}`);
 
-            if (currentVersion !== latestVersion) {
-                core.info(`✨ Version changed from ${latestVersion} to ${currentVersion}`);
-                versionChanged = true;
+            if (decision.versionChanged) {
+                core.info(`✨ Version changed from ${decision.latestVersion} to ${currentVersion}`);
 
-                // Check if tag already exists
-                const exists = await tagExists(newTagName);
-                if (exists) {
+                if (tagAlreadyExists) {
                     core.warning(`⚠️  Tag ${newTagName} already exists. Skipping release.`);
-                    shouldCreateRelease = false;
-                } else {
-                    shouldCreateRelease = true;
                 }
             } else {
                 core.info('ℹ️  Version unchanged, no release needed.');
@@ -71,10 +147,10 @@ async function run(): Promise<void> {
         }
 
         // Set version-changed output
-        core.setOutput('version-changed', versionChanged.toString());
+        core.setOutput('version-changed', decision.versionChanged.toString());
         core.setOutput('version', currentVersion);
 
-        if (!shouldCreateRelease) {
+        if (!decision.shouldCreateRelease) {
             core.setOutput('release-created', 'false');
             core.info('✅ Action completed (no release created)');
             return;
@@ -82,24 +158,24 @@ async function run(): Promise<void> {
 
         // Extract changelog for this version
         core.info(`📖 Extracting changelog for version ${currentVersion}...`);
-        let changelogContent = extractChangelog(changelogPath, currentVersion);
+        const rawChangelogContent = extractChangelog(changelogPath, currentVersion);
+        const changelogContent = getChangelogWithFallback(rawChangelogContent, currentVersion);
 
-        if (!changelogContent) {
-            changelogContent = `Release ${currentVersion}`;
+        if (!rawChangelogContent) {
             core.warning('No changelog content found, using default message');
         }
 
         // Create git tag
-        core.info(`🏷️  Creating tag: ${newTagName}`);
-        await createGitTag(newTagName, `Release ${newTagName}`);
+        core.info(`🏷️  Creating tag: ${decision.newTagName}`);
+        await createGitTag(decision.newTagName, `Release ${decision.newTagName}`);
 
         // Create GitHub release
         core.info('🎊 Creating GitHub release...');
         const release = await octokit.rest.repos.createRelease({
             owner: context.repo.owner,
             repo: context.repo.repo,
-            tag_name: newTagName,
-            name: newTagName,
+            tag_name: decision.newTagName,
+            name: decision.newTagName,
             body: changelogContent,
             draft: createDraft,
             prerelease: createPrerelease,
@@ -112,7 +188,7 @@ async function run(): Promise<void> {
         core.setOutput('release-created', 'true');
         core.setOutput('release-id', release.data.id.toString());
         core.setOutput('release-url', release.data.html_url);
-        core.setOutput('tag-name', newTagName);
+        core.setOutput('tag-name', decision.newTagName);
 
         core.info('🎉 Action completed successfully!');
     } catch (error) {
