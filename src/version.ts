@@ -3,18 +3,44 @@ import * as core from '@actions/core';
 import { exec } from '@actions/exec';
 
 /**
- * Get the current version from package.json
+ * Parse package.json content to extract version (pure function)
+ * @param content - The package.json file content as string
+ * @returns The version string, or empty string if not found
+ * @throws Error if JSON is invalid
+ */
+export function parsePackageJson(content: string): string {
+    const packageJson = JSON.parse(content);
+    return packageJson.version || '';
+}
+
+/**
+ * Get the current version from package.json file
+ * @param packageJsonPath - Path to package.json
+ * @returns The version string
+ * @throws Error if file cannot be read or parsed
  */
 export async function getCurrentVersion(packageJsonPath: string): Promise<string> {
     try {
-        const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
-        return packageJson.version || '';
+        const content = fs.readFileSync(packageJsonPath, 'utf8');
+        return parsePackageJson(content);
     } catch (error: unknown) {
         throw new Error(
             `Failed to read version from ${packageJsonPath}: ${String(error)}`,
             { cause: error }
         );
     }
+}
+
+/**
+ * Parse git tag output to extract tags (pure function)
+ * @param output - Raw output from git tag command
+ * @returns Array of tag names, or empty array if none found
+ */
+export function parseGitTags(output: string): string[] {
+    return output
+        .trim()
+        .split('\n')
+        .filter((tag) => tag.length > 0);
 }
 
 /**
@@ -42,10 +68,7 @@ export async function getLatestVersionTag(tagPrefix: string): Promise<string | n
         return null;
     }
 
-    const tags = output
-        .trim()
-        .split('\n')
-        .filter((tag) => tag.length > 0);
+    const tags = parseGitTags(output);
     return tags.length > 0 ? tags[0] : null;
 }
 
