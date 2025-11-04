@@ -1,0 +1,23 @@
+{
+  "name": "Dev Container",
+  "dockerComposeFile": "./compose.yml",
+  "service": "devcontainer",
+  "shutdownAction": "none",
+
+  "remoteUser": "root",
+  "workspaceFolder": "/workspace",
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "mskelton.npm-outdated",
+        "esbenp.prettier-vscode",
+        "eamodio.gitlens",
+        "wix.vscode-import-cost",
+        "gruntfuggly.todo-tree",
+        "aaron-bond.better-comments",
+        "usernamehw.errorlens"
+      ]
+    }
+  }
+}
