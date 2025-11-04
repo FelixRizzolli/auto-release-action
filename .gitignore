@@ -1,0 +1,29 @@
+# outputs
+lib
+dist
+node-compile-cache
+
+# Node dependencies
+node_modules
+
+# Logs
+logs
+*.log
+
+# Misc
+.DS_Store
+.fleet
+.idea
+
+# Local env files
+.env
+.env.*
+!.env.example
+
+# pnpm
+.pnpm-debug.log
+.pnpm-store
+*storybook.log
+
+# storybook
+storybook-static
