@@ -1,18 +1,8 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
 import * as fs from 'fs';
-import * as path from 'path';
 import { getCurrentVersion, getLatestVersionTag, tagExists, extractVersionFromTag, createGitTag } from './version';
 import { extractChangelog } from './changelog';
-
-interface ReleaseResult {
-    created: boolean;
-    releaseId?: number;
-    releaseUrl?: string;
-    version?: string;
-    tagName?: string;
-    versionChanged: boolean;
-}
 
 async function run(): Promise<void> {
     try {
