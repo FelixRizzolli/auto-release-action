@@ -8,9 +8,25 @@ A GitHub Action that automatically creates releases based on `package.json` vers
 -   📝 Extracts changelog content for the specific version
 -   🏷️ Creates Git tags with customizable prefix
 -   🎊 Creates GitHub releases with formatted release notes
--   📦 Compares and displays dependency changes between versions
 -   🔧 Fully configurable paths and options
 -   🚀 Written in TypeScript for type safety
+
+## Requirements & Recommendations
+
+### Version Management
+
+This action is designed to work best with:
+
+-   **[Semantic Versioning](https://semver.org/)** (e.g., `1.0.0`, `2.1.3`) for your package versions
+-   **[Keep a Changelog](https://keepachangelog.com/)** format for your CHANGELOG.md
+
+While not strictly enforced, following these conventions ensures optimal compatibility and clear version history.
+
+### Technical Requirements
+
+-   Node.js 24 runtime (automatically handled by GitHub Actions)
+-   Repository must have `fetch-depth: 0` in checkout step to access all tags
+-   Workflow needs `contents: write` permission
 
 ## Usage
 
@@ -103,38 +119,38 @@ jobs:
 
 ## CHANGELOG.md Format
 
-The action expects your `CHANGELOG.md` to follow this format:
+Recommended: follow **Semantic Versioning** and the **Keep a Changelog** format. The action looks for a level-2 header (a line starting with `## `) that contains the version number and extracts the section below it until the next level-2 header.
+
+Accepted header examples (all are supported):
+
+-   `## [1.2.3] - 2025-11-04`
+-   `## 1.2.3 - 2025-11-04`
+-   `## [1.2.3]`
+
+Example changelog excerpt:
 
 ```markdown
 # Changelog
 
-## [1.0.0] - 2024-01-15
+## [1.0.0] - 2025-11-04
 
 ### Added
 
--   New feature A
--   New feature B
+-   New feature X
 
 ### Fixed
 
--   Bug fix C
-
-## [0.9.0] - 2024-01-01
-
-### Added
-
--   Initial release
+-   Bug fix Y
 ```
 
-The action will extract the content for the matching version and use it as the release body.
+If the action can't find a matching section in `CHANGELOG.md`, it will fall back to a default release message. Keeping changelog entries concise and using semver makes the release notes clearer and more reliable.
 
 ## How It Works
 
 1. **Version Detection**: Reads the version from `package.json`
 2. **Tag Comparison**: Compares with the latest Git tag to detect version changes
 3. **Changelog Extraction**: Extracts the relevant section from `CHANGELOG.md`
-4. **Dependency Comparison**: Compares dependencies with the previous version and adds a summary
-5. **Release Creation**: Creates a Git tag and GitHub release with the combined information
+4. **Release Creation**: Creates a Git tag and GitHub release with the changelog content
 
 ## Requirements
 
@@ -148,7 +164,6 @@ If you're migrating from a workflow with shell scripts, this action replaces:
 
 -   `scripts/get-current-version.sh` → Built-in version detection
 -   `scripts/extract-changelog.sh` → Built-in changelog extraction
--   `scripts/compare-package-json.cjs` → Built-in dependency comparison
 -   Manual tag creation and release steps → Automated in one step
 
 Simply replace your old workflow with the basic example above!
@@ -170,8 +185,7 @@ The compiled action is in the `dist/` folder and must be committed.
 src/
   ├── index.ts           # Main action entry point
   ├── version.ts         # Version detection and Git operations
-  ├── changelog.ts       # Changelog extraction
-  └── package-compare.ts # Dependency comparison
+  └── changelog.ts       # Changelog extraction
 ```
 
 ## License
