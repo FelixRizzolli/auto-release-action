@@ -2,15 +2,12 @@ import * as fs from 'fs';
 import * as core from '@actions/core';
 
 /**
- * Extract changelog content for a specific version
+ * Parse changelog content for a specific version (pure function)
+ * @param content - The full changelog file content
+ * @param version - The version to extract (e.g., "1.0.0" or "v1.0.0")
+ * @returns The parsed changelog section for the version, or empty string if not found
  */
-export function extractChangelog(changelogPath: string, version: string): string {
-    if (!fs.existsSync(changelogPath)) {
-        core.warning(`CHANGELOG.md not found at ${changelogPath}`);
-        return '';
-    }
-
-    const content = fs.readFileSync(changelogPath, 'utf8');
+export function parseChangelogContent(content: string, version: string): string {
     const lines = content.split('\n');
 
     // Normalize version (remove leading v if present)
@@ -25,7 +22,6 @@ export function extractChangelog(changelogPath: string, version: string): string
     const startLineIndex = lines.findIndex((line) => headerRegex.test(line));
 
     if (startLineIndex === -1) {
-        core.warning(`Version ${versionClean} not found in ${changelogPath}`);
         return '';
     }
 
@@ -52,6 +48,29 @@ export function extractChangelog(changelogPath: string, version: string): string
 
     // Convert tabs to spaces (4 spaces per tab)
     const result = changelogContent.map((line) => line.replace(/^\t/g, '    ')).join('\n');
+
+    return result;
+}
+
+/**
+ * Extract changelog content for a specific version from a file
+ * @param changelogPath - Path to the CHANGELOG.md file
+ * @param version - The version to extract
+ * @returns The parsed changelog section, or empty string if not found
+ */
+export function extractChangelog(changelogPath: string, version: string): string {
+    if (!fs.existsSync(changelogPath)) {
+        core.warning(`CHANGELOG.md not found at ${changelogPath}`);
+        return '';
+    }
+
+    const content = fs.readFileSync(changelogPath, 'utf8');
+    const result = parseChangelogContent(content, version);
+
+    if (!result) {
+        const versionClean = version.replace(/^v/, '');
+        core.warning(`Version ${versionClean} not found in ${changelogPath}`);
+    }
 
     return result;
 }
