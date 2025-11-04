@@ -1,0 +1,41 @@
+name: Auto Release
+
+on:
+    push:
+        branches:
+            - main
+        paths:
+            - 'package.json'
+            - 'CHANGELOG.md'
+    workflow_dispatch: {}
+
+permissions:
+    contents: write
+
+jobs:
+    release:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0 # Fetch all history for tags
+
+            - name: Create Release
+              id: release
+              uses: FelixRizzolli/auto-release-action@v1
+              with:
+                  github-token: ${{ secrets.GITHUB_TOKEN }}
+                  package-json-path: 'package.json'
+                  changelog-path: 'CHANGELOG.md'
+                  tag-prefix: 'v'
+                  create-draft: false
+                  create-prerelease: false
+
+            - name: Display Release Info
+              if: steps.release.outputs.release-created == 'true'
+              run: |
+                  echo "✅ Release created successfully!"
+                  echo "🔗 Release URL: ${{ steps.release.outputs.release-url }}"
+                  echo "📌 Version: ${{ steps.release.outputs.version }}"
+                  echo "🏷️  Tag: ${{ steps.release.outputs.tag-name }}"

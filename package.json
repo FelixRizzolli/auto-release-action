@@ -1,0 +1,29 @@
+{
+    "name": "auto-release-action",
+    "version": "1.0.0",
+    "description": "GitHub Action for automated releases",
+    "main": "dist/index.js",
+    "scripts": {
+        "build": "tsc && ncc build lib/index.js -o dist --source-map --license licenses.txt",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "keywords": [
+        "github",
+        "action",
+        "release",
+        "automation"
+    ],
+    "author": "",
+    "license": "ISC",
+    "packageManager": "pnpm@10.18.3",
+    "dependencies": {
+        "@actions/core": "^1.11.1",
+        "@actions/exec": "^1.1.1",
+        "@actions/github": "^6.0.1"
+    },
+    "devDependencies": {
+        "@types/node": "^24.10.0",
+        "@vercel/ncc": "^0.38.4",
+        "typescript": "^5.9.3"
+    }
+}

@@ -1,0 +1,57 @@
+name: 'Auto Release Action'
+description: 'Automatically create GitHub releases based on package.json version changes and CHANGELOG.md'
+author: 'Felix Rizzolli'
+
+inputs:
+    github-token:
+        description: 'GitHub token for authentication (needs contents: write permission)'
+        required: true
+        default: ${{ github.token }}
+
+    package-json-path:
+        description: 'Path to package.json file (relative to repository root)'
+        required: false
+        default: 'package.json'
+
+    changelog-path:
+        description: 'Path to CHANGELOG.md file (relative to repository root)'
+        required: false
+        default: 'CHANGELOG.md'
+
+    tag-prefix:
+        description: 'Prefix for version tags (e.g., "v" for v1.0.0)'
+        required: false
+        default: 'v'
+
+    create-draft:
+        description: 'Create release as draft'
+        required: false
+        default: 'false'
+
+    create-prerelease:
+        description: 'Mark release as prerelease'
+        required: false
+        default: 'false'
+
+outputs:
+    release-created:
+        description: 'Whether a release was created (true/false)'
+
+    release-id:
+        description: 'The ID of the created release'
+
+    release-url:
+        description: 'The URL of the created release'
+
+    version:
+        description: 'The version number of the release'
+
+    tag-name:
+        description: 'The tag name created'
+
+    version-changed:
+        description: 'Whether the version changed compared to the last tag'
+
+runs:
+    using: 'node24'
+    main: 'dist/index.js'
