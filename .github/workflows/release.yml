@@ -21,21 +21,21 @@ jobs:
               with:
                   fetch-depth: 0 # Fetch all history for tags
 
-            - name: Create Release
-              id: release
-              uses: FelixRizzolli/auto-release-action@v1
+            - name: Setup Node.js
+              uses: actions/setup-node@v6
+              with:
+                  node-version: '24'
+
+            - name: Setup pnpm
+              uses: pnpm/action-setup@v4
+
+            - name: Install dependencies
+              run: pnpm install
+
+            - name: Build action
+              run: pnpm run build
+
+            - name: Run action locally
+              uses: ./
               with:
                   github-token: ${{ secrets.GITHUB_TOKEN }}
-                  package-json-path: 'package.json'
-                  changelog-path: 'CHANGELOG.md'
-                  tag-prefix: 'v'
-                  create-draft: false
-                  create-prerelease: false
-
-            - name: Display Release Info
-              if: steps.release.outputs.release-created == 'true'
-              run: |
-                  echo "✅ Release created successfully!"
-                  echo "🔗 Release URL: ${{ steps.release.outputs.release-url }}"
-                  echo "📌 Version: ${{ steps.release.outputs.version }}"
-                  echo "🏷️  Tag: ${{ steps.release.outputs.tag-name }}"
