@@ -106,10 +106,7 @@ export class GitService implements IGitService {
         });
 
         if (exitCode !== 0) {
-            throw new Error(
-                `Failed to get ${filePath} from tag ${tagName}: ${error}`,
-                { cause: error }
-            );
+            throw new Error(`Failed to get ${filePath} from tag ${tagName}: ${error}`, { cause: error });
         }
 
         return output;

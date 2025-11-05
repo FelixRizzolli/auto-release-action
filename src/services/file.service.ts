@@ -23,10 +23,7 @@ export class FileService implements IFileService {
         try {
             return fs.readFileSync(filePath, 'utf8');
         } catch (error: unknown) {
-            throw new Error(
-                `Failed to read file ${filePath}: ${String(error)}`,
-                { cause: error }
-            );
+            throw new Error(`Failed to read file ${filePath}: ${String(error)}`, { cause: error });
         }
     }
 

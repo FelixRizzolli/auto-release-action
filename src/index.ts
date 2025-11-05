@@ -188,12 +188,12 @@ async function run(): Promise<void> {
 
         // Extract changelog for this version
         core.info(`📖 Extracting changelog for version ${currentVersion}...`);
-        
+
         let rawChangelogContent = '';
         if (fileService.fileExists(config.changelogPath)) {
             const changelogFileContent = fileService.readFile(config.changelogPath);
             rawChangelogContent = parseChangelogContent(changelogFileContent, currentVersion);
-            
+
             if (isBlank(rawChangelogContent)) {
                 const versionClean = currentVersion.replace(/^v/, '');
                 core.warning(`Version ${versionClean} not found in ${config.changelogPath}`);
@@ -201,7 +201,7 @@ async function run(): Promise<void> {
         } else {
             core.warning(`CHANGELOG.md not found at ${config.changelogPath}`);
         }
-        
+
         const changelogContent = getChangelogWithFallback(rawChangelogContent, currentVersion);
 
         if (isBlank(rawChangelogContent)) {
