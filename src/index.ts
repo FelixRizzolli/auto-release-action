@@ -6,6 +6,18 @@ import { extractChangelog } from './changelog';
 import { buildTagName, isBlank } from './utils';
 
 /**
+ * Configuration for the release action
+ */
+export interface ReleaseConfig {
+    githubToken: string;
+    packageJsonPath: string;
+    changelogPath: string;
+    tagPrefix: string;
+    createDraft: boolean;
+    createPrerelease: boolean;
+}
+
+/**
  * Result of determining whether to create a release (pure business logic)
  */
 interface ReleaseDecision {
@@ -86,33 +98,43 @@ export function getChangelogWithFallback(changelogContent: string, version: stri
     return changelogContent || `Release ${version}`;
 }
 
+/**
+ * Parse inputs from GitHub Actions (pure function)
+ * @returns Configuration object
+ */
+export function parseInputs(): ReleaseConfig {
+    return {
+        githubToken: core.getInput('github-token', { required: true }),
+        packageJsonPath: core.getInput('package-json-path') || 'package.json',
+        changelogPath: core.getInput('changelog-path') || 'CHANGELOG.md',
+        tagPrefix: core.getInput('tag-prefix') || 'v',
+        createDraft: core.getInput('create-draft') === 'true',
+        createPrerelease: core.getInput('create-prerelease') === 'true',
+    };
+}
+
 async function run(): Promise<void> {
     try {
         // Get inputs
-        const githubToken = core.getInput('github-token', { required: true });
-        const packageJsonPath = core.getInput('package-json-path') || 'package.json';
-        const changelogPath = core.getInput('changelog-path') || 'CHANGELOG.md';
-        const tagPrefix = core.getInput('tag-prefix') || 'v';
-        const createDraft = core.getInput('create-draft') === 'true';
-        const createPrerelease = core.getInput('create-prerelease') === 'true';
+        const config = parseInputs();
 
         core.info('🚀 Starting Auto Release Action...');
-        core.info(`📦 Package.json path: ${packageJsonPath}`);
-        core.info(`📝 Changelog path: ${changelogPath}`);
-        core.info(`🏷️  Tag prefix: ${tagPrefix}`);
+        core.info(`📦 Package.json path: ${config.packageJsonPath}`);
+        core.info(`📝 Changelog path: ${config.changelogPath}`);
+        core.info(`🏷️  Tag prefix: ${config.tagPrefix}`);
 
         // Get GitHub context
         const context = github.context;
-        const octokit = github.getOctokit(githubToken);
+        const octokit = github.getOctokit(config.githubToken);
 
         // Check if package.json exists
-        if (!fs.existsSync(packageJsonPath)) {
-            core.setFailed(`package.json not found at: ${packageJsonPath}`);
+        if (!fs.existsSync(config.packageJsonPath)) {
+            core.setFailed(`package.json not found at: ${config.packageJsonPath}`);
             return;
         }
 
         // Get current version from package.json
-        const currentVersion = await getCurrentVersion(packageJsonPath);
+        const currentVersion = await getCurrentVersion(config.packageJsonPath);
         if (isBlank(currentVersion)) {
             core.setFailed('No version found in package.json');
             return;
@@ -121,14 +143,14 @@ async function run(): Promise<void> {
         core.info(`📌 Current version: ${currentVersion}`);
 
         // Get the latest version tag
-        const latestTag = await getLatestVersionTag(tagPrefix);
+        const latestTag = await getLatestVersionTag(config.tagPrefix);
 
         // Check if the new tag already exists
-        const newTagName = buildTagName(tagPrefix, currentVersion);
+        const newTagName = buildTagName(config.tagPrefix, currentVersion);
         const tagAlreadyExists = await tagExists(newTagName);
 
         // Determine if we should create a release (pure business logic)
-        const decision = determineReleaseDecision(currentVersion, latestTag, tagPrefix, tagAlreadyExists);
+        const decision = determineReleaseDecision(currentVersion, latestTag, config.tagPrefix, tagAlreadyExists);
 
         // Log decision details
         if (isBlank(latestTag)) {
@@ -159,7 +181,7 @@ async function run(): Promise<void> {
 
         // Extract changelog for this version
         core.info(`📖 Extracting changelog for version ${currentVersion}...`);
-        const rawChangelogContent = extractChangelog(changelogPath, currentVersion);
+        const rawChangelogContent = extractChangelog(config.changelogPath, currentVersion);
         const changelogContent = getChangelogWithFallback(rawChangelogContent, currentVersion);
 
         if (isBlank(rawChangelogContent)) {
@@ -178,8 +200,8 @@ async function run(): Promise<void> {
             tag_name: decision.newTagName,
             name: decision.newTagName,
             body: changelogContent,
-            draft: createDraft,
-            prerelease: createPrerelease,
+            draft: config.createDraft,
+            prerelease: config.createPrerelease,
         });
 
         core.info(`✅ Release created successfully!`);

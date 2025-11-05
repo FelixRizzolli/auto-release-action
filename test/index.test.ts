@@ -1,5 +1,75 @@
-import { describe, it, expect } from 'vitest';
-import { determineReleaseDecision, getChangelogWithFallback } from '../src/index';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { determineReleaseDecision, getChangelogWithFallback, parseInputs } from '../src/index';
+import * as core from '@actions/core';
+
+describe('parseInputs', () => {
+    let mockGetInput: any;
+
+    beforeEach(() => {
+        mockGetInput = vi.spyOn(core, 'getInput');
+    });
+
+    afterEach(() => {
+        mockGetInput.mockRestore();
+    });
+
+    it('should parse all inputs with default values', () => {
+        mockGetInput.mockImplementation((name: string) => {
+            if (name === 'github-token') return 'test-token';
+            return '';
+        });
+
+        const config = parseInputs();
+
+        expect(config).toEqual({
+            githubToken: 'test-token',
+            packageJsonPath: 'package.json',
+            changelogPath: 'CHANGELOG.md',
+            tagPrefix: 'v',
+            createDraft: false,
+            createPrerelease: false,
+        });
+    });
+
+    it('should parse custom values when provided', () => {
+        mockGetInput.mockImplementation((name: string) => {
+            switch (name) {
+                case 'github-token': return 'custom-token';
+                case 'package-json-path': return 'custom/package.json';
+                case 'changelog-path': return 'docs/CHANGELOG.md';
+                case 'tag-prefix': return 'release-';
+                case 'create-draft': return 'true';
+                case 'create-prerelease': return 'true';
+                default: return '';
+            }
+        });
+
+        const config = parseInputs();
+
+        expect(config).toEqual({
+            githubToken: 'custom-token',
+            packageJsonPath: 'custom/package.json',
+            changelogPath: 'docs/CHANGELOG.md',
+            tagPrefix: 'release-',
+            createDraft: true,
+            createPrerelease: true,
+        });
+    });
+
+    it('should handle boolean flags correctly', () => {
+        mockGetInput.mockImplementation((name: string) => {
+            if (name === 'github-token') return 'token';
+            if (name === 'create-draft') return 'false';
+            if (name === 'create-prerelease') return 'false';
+            return '';
+        });
+
+        const config = parseInputs();
+
+        expect(config.createDraft).toBe(false);
+        expect(config.createPrerelease).toBe(false);
+    });
+});
 
 describe('determineReleaseDecision', () => {
     describe('first release (no previous tags)', () => {
