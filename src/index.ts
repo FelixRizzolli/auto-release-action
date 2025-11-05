@@ -114,7 +114,92 @@ export function parseInputs(): ReleaseConfig {
     };
 }
 
-async function run(): Promise<void> {
+/**
+ * Read and parse the current version from package.json
+ * @param fileService - File service instance
+ * @param packageJsonPath - Path to package.json
+ * @returns Current version string
+ * @throws Error if package.json doesn't exist or version is missing
+ */
+export function getCurrentVersion(fileService: FileService, packageJsonPath: string): string {
+    if (!fileService.fileExists(packageJsonPath)) {
+        throw new Error(`package.json not found at: ${packageJsonPath}`);
+    }
+
+    const packageContent = fileService.readFile(packageJsonPath);
+    const currentVersion = parsePackageJson(packageContent);
+    
+    if (isBlank(currentVersion)) {
+        throw new Error('No version found in package.json');
+    }
+
+    return currentVersion;
+}
+
+/**
+ * Extract changelog content for a specific version
+ * @param fileService - File service instance
+ * @param changelogPath - Path to changelog file
+ * @param version - Version to extract changelog for
+ * @returns Changelog content (may be empty string if not found)
+ */
+export function extractChangelog(
+    fileService: FileService,
+    changelogPath: string,
+    version: string
+): string {
+    if (!fileService.fileExists(changelogPath)) {
+        return '';
+    }
+
+    const changelogFileContent = fileService.readFile(changelogPath);
+    return parseChangelogContent(changelogFileContent, version);
+}
+
+/**
+ * Parameters for creating a GitHub release
+ */
+export interface CreateReleaseParams {
+    octokit: ReturnType<typeof github.getOctokit>;
+    owner: string;
+    repo: string;
+    tagName: string;
+    body: string;
+    draft: boolean;
+    prerelease: boolean;
+}
+
+/**
+ * Result of creating a GitHub release
+ */
+export interface CreateReleaseResult {
+    id: number;
+    htmlUrl: string;
+}
+
+/**
+ * Create a GitHub release
+ * @param params - Release parameters
+ * @returns Release result with id and URL
+ */
+export async function createGitHubRelease(params: CreateReleaseParams): Promise<CreateReleaseResult> {
+    const release = await params.octokit.rest.repos.createRelease({
+        owner: params.owner,
+        repo: params.repo,
+        tag_name: params.tagName,
+        name: params.tagName,
+        body: params.body,
+        draft: params.draft,
+        prerelease: params.prerelease,
+    });
+
+    return {
+        id: release.data.id,
+        htmlUrl: release.data.html_url,
+    };
+}
+
+export async function run(): Promise<void> {
     try {
         // Get inputs
         const config = parseInputs();
@@ -132,20 +217,8 @@ async function run(): Promise<void> {
         const gitService = new GitService();
         const fileService = new FileService();
 
-        // Check if package.json exists
-        if (!fileService.fileExists(config.packageJsonPath)) {
-            core.setFailed(`package.json not found at: ${config.packageJsonPath}`);
-            return;
-        }
-
         // Get current version from package.json
-        const packageContent = fileService.readFile(config.packageJsonPath);
-        const currentVersion = parsePackageJson(packageContent);
-        if (isBlank(currentVersion)) {
-            core.setFailed('No version found in package.json');
-            return;
-        }
-
+        const currentVersion = getCurrentVersion(fileService, config.packageJsonPath);
         core.info(`📌 Current version: ${currentVersion}`);
 
         // Get the latest version tag
@@ -162,11 +235,13 @@ async function run(): Promise<void> {
         // Log decision details
         if (isBlank(latestTag)) {
             core.info('🎉 No previous tags found, this will be the first release!');
-        } else if (decision.latestVersion) {
-            core.info(`🔖 Latest tagged version: ${decision.latestVersion}`);
+        } else {
+            // Always true in practice, but guard against edge cases
+            const latestVersionDisplay = decision.latestVersion || latestTag;
+            core.info(`🔖 Latest tagged version: ${latestVersionDisplay}`);
 
             if (decision.versionChanged) {
-                core.info(`✨ Version changed from ${decision.latestVersion} to ${currentVersion}`);
+                core.info(`✨ Version changed from ${latestVersionDisplay} to ${currentVersion}`);
 
                 if (tagAlreadyExists) {
                     core.warning(`⚠️  Tag ${newTagName} already exists. Skipping release.`);
@@ -189,24 +264,19 @@ async function run(): Promise<void> {
         // Extract changelog for this version
         core.info(`📖 Extracting changelog for version ${currentVersion}...`);
 
-        let rawChangelogContent = '';
-        if (fileService.fileExists(config.changelogPath)) {
-            const changelogFileContent = fileService.readFile(config.changelogPath);
-            rawChangelogContent = parseChangelogContent(changelogFileContent, currentVersion);
+        const rawChangelogContent = extractChangelog(fileService, config.changelogPath, currentVersion);
 
-            if (isBlank(rawChangelogContent)) {
+        if (isBlank(rawChangelogContent)) {
+            if (fileService.fileExists(config.changelogPath)) {
                 const versionClean = currentVersion.replace(/^v/, '');
                 core.warning(`Version ${versionClean} not found in ${config.changelogPath}`);
+            } else {
+                core.warning(`CHANGELOG.md not found at ${config.changelogPath}`);
             }
-        } else {
-            core.warning(`CHANGELOG.md not found at ${config.changelogPath}`);
+            core.warning('No changelog content found, using default message');
         }
 
         const changelogContent = getChangelogWithFallback(rawChangelogContent, currentVersion);
-
-        if (isBlank(rawChangelogContent)) {
-            core.warning('No changelog content found, using default message');
-        }
 
         // Create git tag
         core.info(`🏷️  Creating tag: ${decision.newTagName}`);
@@ -214,23 +284,23 @@ async function run(): Promise<void> {
 
         // Create GitHub release
         core.info('🎊 Creating GitHub release...');
-        const release = await octokit.rest.repos.createRelease({
+        const releaseResult = await createGitHubRelease({
+            octokit,
             owner: context.repo.owner,
             repo: context.repo.repo,
-            tag_name: decision.newTagName,
-            name: decision.newTagName,
+            tagName: decision.newTagName,
             body: changelogContent,
             draft: config.createDraft,
             prerelease: config.createPrerelease,
         });
 
         core.info(`✅ Release created successfully!`);
-        core.info(`🔗 Release URL: ${release.data.html_url}`);
+        core.info(`🔗 Release URL: ${releaseResult.htmlUrl}`);
 
         // Set outputs
         core.setOutput('release-created', 'true');
-        core.setOutput('release-id', release.data.id.toString());
-        core.setOutput('release-url', release.data.html_url);
+        core.setOutput('release-id', releaseResult.id.toString());
+        core.setOutput('release-url', releaseResult.htmlUrl);
         core.setOutput('tag-name', decision.newTagName);
 
         core.info('🎉 Action completed successfully!');
