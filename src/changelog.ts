@@ -46,8 +46,8 @@ export function parseChangelogContent(content: string, version: string): string 
         changelogContent.pop();
     }
 
-    // Convert tabs to spaces (4 spaces per tab)
-    const result = changelogContent.map((line) => line.replace(/^\t/g, '    ')).join('\n');
+    // Convert all tabs to spaces (4 spaces per tab)
+    const result = changelogContent.map((line) => line.replace(/\t/g, '    ')).join('\n');
 
     return result;
 }

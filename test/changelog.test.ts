@@ -131,10 +131,7 @@ Content here
         const result = parseChangelogContent(content, '1.0.0');
 
         expect(result).toContain('    - Indented with tab');
-        
-        // Note: The regex only replaces tabs at the start of lines (^\t)
-        // So \t\t becomes 4 spaces + \t (not 8 spaces)
-        expect(result).toContain('    \t- Double indented');
+        expect(result).toContain('        - Double indented');
     });
 
     it('should handle various version formats', () => {
