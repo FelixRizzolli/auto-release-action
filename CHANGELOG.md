@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2025-11-05
+
+### Added
+
+- Switched code formatter from Prettier to `oxfmt` and added a configuration file (`.oxfmtrc.json`). New npm scripts: `format`, `format:check`.
+- Added `oxlint` for linting and a `lint` script (devDependency: `oxlint`).
+- Introduced Vitest for testing with a `vitest.config.ts` and coverage via the V8 provider. New npm scripts: `test`, `test:watch`, `test:coverage`.
+- Refactored the codebase for improved structure and testability; added comprehensive unit tests covering the project.
+- Test coverage reports are included (coverage artifacts added) and tests currently report 100% coverage for the instrumented files.
+
+### Changed
+
+- `package.json` updated with new devDependencies and scripts (oxfmt, oxlint, vitest, @vitest/coverage-v8).
+- Development environment (`.devcontainer`) updated to reference oxfmt/oxlint and Vitest tooling.
+
 ## [1.0.0] - 2025-11-04
 
 ### Initial Release
