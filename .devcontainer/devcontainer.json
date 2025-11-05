@@ -12,6 +12,7 @@
       "extensions": [
         "mskelton.npm-outdated",
         "oxc.oxc-vscode",
+        "vitest.explorer",
         "eamodio.gitlens",
         "wix.vscode-import-cost",
         "gruntfuggly.todo-tree",

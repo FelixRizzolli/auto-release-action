@@ -3,6 +3,9 @@ lib
 dist
 node-compile-cache
 
+# Test coverage
+coverage
+
 # Node dependencies
 node_modules
 
