@@ -1,49 +1,21 @@
 # Auto Release Action
 
-A GitHub Action that automatically creates releases based on `package.json` version changes and `CHANGELOG.md` content.
+A compact GitHub Action that creates releases automatically when your `package.json` version changes.
 
-## Features
+Clear, fast, and focused — designed for repos that use [Semantic Versioning](https://semver.org/spec/v2.0.0.html) and `CHANGELOG.md` file with a format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
--   ✅ Automatically detects version changes in `package.json`
--   📝 Extracts changelog content for the specific version
--   🏷️ Creates Git tags with customizable prefix
--   🎊 Creates GitHub releases with formatted release notes
--   🔧 Fully configurable paths and options
--   🚀 Written in TypeScript for type safety
+## Quick start
 
-## Requirements & Recommendations
-
-### Version Management
-
-This action is designed to work best with:
-
--   **[Semantic Versioning](https://semver.org/)** (e.g., `1.0.0`, `2.1.3`) for your package versions
--   **[Keep a Changelog](https://keepachangelog.com/)** format for your CHANGELOG.md
-
-While not strictly enforced, following these conventions ensures optimal compatibility and clear version history.
-
-### Technical Requirements
-
--   Node.js 24 runtime (automatically handled by GitHub Actions)
--   Repository must have `fetch-depth: 0` in checkout step to access all tags
--   Workflow needs `contents: write` permission
-
-## Usage
-
-### Basic Example
-
-Create a workflow file (e.g., `.github/workflows/release.yml`):
+1. Add a workflow file like `.github/workflows/release.yml`.
+2. Ensure the checkout step fetches tags (important): `fetch-depth: 0`.
+3. Use the action and provide a GitHub token:
 
 ```yaml
-name: Auto Release
-
+name: Release
 on:
     push:
-        branches:
-            - main
-        paths:
-            - 'package.json'
-            - 'CHANGELOG.md'
+        branches: [ main ]
+        paths: [ 'package.json', 'CHANGELOG.md' ]
     workflow_dispatch:
 
 permissions:
@@ -53,145 +25,65 @@ jobs:
     release:
         runs-on: ubuntu-latest
         steps:
-            - name: Checkout code
-              uses: actions/checkout@v4
-              with:
-                  fetch-depth: 0 # Important: fetch all history for tags
+            - uses: actions/checkout@v4
+                with:
+                    fetch-depth: 0
 
             - name: Create Release
-              uses: FelixRizzolli/auto-release-action@v1
-              with:
-                  github-token: ${{ secrets.GITHUB_TOKEN }}
-```
-
-### Advanced Configuration
-
-```yaml
-- name: Create Release
-  uses: FelixRizzolli/auto-release-action@v1
-  with:
-      github-token: ${{ secrets.GITHUB_TOKEN }}
-      package-json-path: 'package.json'
-      changelog-path: 'CHANGELOG.md'
-      tag-prefix: 'v'
-      create-draft: false
-      create-prerelease: false
-```
-
-### With Outputs
-
-```yaml
-- name: Create Release
-  id: release
-  uses: FelixRizzolli/auto-release-action@v1
-  with:
-      github-token: ${{ secrets.GITHUB_TOKEN }}
-
-- name: Display Release Info
-  if: steps.release.outputs.release-created == 'true'
-  run: |
-      echo "Release created: ${{ steps.release.outputs.release-url }}"
-      echo "Version: ${{ steps.release.outputs.version }}"
-      echo "Tag: ${{ steps.release.outputs.tag-name }}"
+                uses: FelixRizzolli/auto-release-action@v1
+                with:
+                    github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 ## Inputs
 
-| Input               | Description                                                          | Required | Default               |
-| ------------------- | -------------------------------------------------------------------- | -------- | --------------------- |
-| `github-token`      | GitHub token for authentication (needs `contents: write` permission) | Yes      | `${{ github.token }}` |
-| `package-json-path` | Path to package.json file (relative to repository root)              | No       | `package.json`        |
-| `changelog-path`    | Path to CHANGELOG.md file (relative to repository root)              | No       | `CHANGELOG.md`        |
-| `tag-prefix`        | Prefix for version tags (e.g., "v" for v1.0.0)                       | No       | `v`                   |
-| `create-draft`      | Create release as draft                                              | No       | `false`               |
-| `create-prerelease` | Mark release as prerelease                                           | No       | `false`               |
+| Name | Description | Required | Default |
+|------|-------------|:--------:|:-------:|
+| `github-token` | GitHub token with `contents: write` permission | Yes | `${{ github.token }}` |
+| `package-json-path` | Path to package.json | No | `package.json` |
+| `changelog-path` | Path to CHANGELOG.md | No | `CHANGELOG.md` |
+| `tag-prefix` | Tag name prefix (e.g. `v`) | No | `v` |
+| `create-draft` | Create release as draft | No | `false` |
+| `create-prerelease` | Mark release as prerelease | No | `false` |
 
 ## Outputs
 
-| Output            | Description                                          |
-| ----------------- | ---------------------------------------------------- |
-| `release-created` | Whether a release was created (`true`/`false`)       |
-| `release-id`      | The ID of the created release                        |
-| `release-url`     | The URL of the created release                       |
-| `version`         | The version number of the release                    |
-| `tag-name`        | The tag name created                                 |
-| `version-changed` | Whether the version changed compared to the last tag |
+| Name | Description |
+|------|-------------|
+| `release-created` | `true` if a release was created |
+| `release-id` | The GitHub release ID |
+| `release-url` | URL of the created release |
+| `version` | Version used for the release |
+| `tag-name` | Created tag name |
+| `version-changed` | `true` if version changed from last tag |
 
-## CHANGELOG.md Format
+## Behavior
 
-Recommended: follow **Semantic Versioning** and the **Keep a Changelog** format. The action looks for a level-2 header (a line starting with `## `) that contains the version number and extracts the section below it until the next level-2 header.
+- Reads the version from `package.json`.
+- Compares it to the latest tag in the repository.
+- If the version changed, extracts the matching section from `CHANGELOG.md` (expects level-2 headers `##`) and creates a tag + GitHub release using that changelog content.
+- Falls back to a default message if no matching changelog section is found.
 
-Accepted header examples (all are supported):
+Recommended formats for changelog headers:
 
--   `## [1.2.3] - 2025-11-04`
--   `## 1.2.3 - 2025-11-04`
--   `## [1.2.3]`
-
-Example changelog excerpt:
-
-```markdown
-# Changelog
-
-## [1.0.0] - 2025-11-04
-
-### Added
-
--   New feature X
-
-### Fixed
-
--   Bug fix Y
-```
-
-If the action can't find a matching section in `CHANGELOG.md`, it will fall back to a default release message. Keeping changelog entries concise and using semver makes the release notes clearer and more reliable.
-
-## How It Works
-
-1. **Version Detection**: Reads the version from `package.json`
-2. **Tag Comparison**: Compares with the latest Git tag to detect version changes
-3. **Changelog Extraction**: Extracts the relevant section from `CHANGELOG.md`
-4. **Release Creation**: Creates a Git tag and GitHub release with the changelog content
-
-## Requirements
-
--   Node.js 24 runtime (automatically handled by GitHub Actions)
--   Repository must have `fetch-depth: 0` in checkout step to access all tags
--   Workflow needs `contents: write` permission
-
-## Migration from Old Workflow
-
-If you're migrating from a workflow with shell scripts, this action replaces:
-
--   `scripts/get-current-version.sh` → Built-in version detection
--   `scripts/extract-changelog.sh` → Built-in changelog extraction
--   Manual tag creation and release steps → Automated in one step
-
-Simply replace your old workflow with the basic example above!
+- `## [1.2.3] - 2025-11-04`
+- `## 1.2.3 - 2025-11-04`
+- `## [1.2.3]`
 
 ## Development
 
-### Building
+Build and test locally:
 
 ```bash
 pnpm install
 pnpm run build
+pnpm test
 ```
 
-The compiled action is in the `dist/` folder and must be committed.
-
-### Project Structure
-
-```
-src/
-  ├── index.ts           # Main action entry point
-  ├── version.ts         # Version detection and Git operations
-  └── changelog.ts       # Changelog extraction
-```
-
-## License
-
-ISC
+Notes:
+- The compiled action is produced in `dist/` and should be committed for use in workflows that reference the repo directly.
+- Tests use Vitest and coverage is produced with V8 (`@vitest/coverage-v8`).
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions welcome — please open issues or pull requests. Keep changes focused and include tests for new behavior.
