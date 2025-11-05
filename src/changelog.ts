@@ -1,6 +1,9 @@
-import * as fs from 'fs';
 import * as core from '@actions/core';
 import { replaceTabs, trimEmptyEdges, isBlank } from './utils';
+import { FileService, IFileService } from './services/file.service';
+
+// Default file service instance
+const defaultFileService = new FileService();
 
 /**
  * Parse changelog content for a specific version (pure function)
@@ -52,15 +55,20 @@ export function parseChangelogContent(content: string, version: string): string 
  * Extract changelog content for a specific version from a file
  * @param changelogPath - Path to the CHANGELOG.md file
  * @param version - The version to extract
+ * @param fileService - Optional file service for dependency injection
  * @returns The parsed changelog section, or empty string if not found
  */
-export function extractChangelog(changelogPath: string, version: string): string {
-    if (!fs.existsSync(changelogPath)) {
+export function extractChangelog(
+    changelogPath: string,
+    version: string,
+    fileService: IFileService = defaultFileService
+): string {
+    if (!fileService.fileExists(changelogPath)) {
         core.warning(`CHANGELOG.md not found at ${changelogPath}`);
         return '';
     }
 
-    const content = fs.readFileSync(changelogPath, 'utf8');
+    const content = fileService.readFile(changelogPath);
     const result = parseChangelogContent(content, version);
 
     if (isBlank(result)) {

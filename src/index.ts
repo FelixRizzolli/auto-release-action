@@ -1,10 +1,10 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
-import * as fs from 'fs';
 import { getCurrentVersion, extractVersionFromTag } from './version';
 import { extractChangelog } from './changelog';
 import { buildTagName, isBlank } from './utils';
 import { GitService } from './services/git.service';
+import { FileService } from './services/file.service';
 
 /**
  * Configuration for the release action
@@ -128,11 +128,12 @@ async function run(): Promise<void> {
         const context = github.context;
         const octokit = github.getOctokit(config.githubToken);
 
-        // Initialize git service
+        // Initialize services
         const gitService = new GitService();
+        const fileService = new FileService();
 
         // Check if package.json exists
-        if (!fs.existsSync(config.packageJsonPath)) {
+        if (!fileService.fileExists(config.packageJsonPath)) {
             core.setFailed(`package.json not found at: ${config.packageJsonPath}`);
             return;
         }

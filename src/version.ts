@@ -1,4 +1,7 @@
-import * as fs from 'fs';
+import { FileService, IFileService } from './services/file.service';
+
+// Default file service instance
+const defaultFileService = new FileService();
 
 /**
  * Parse package.json content to extract version (pure function)
@@ -14,19 +17,16 @@ export function parsePackageJson(content: string): string {
 /**
  * Get the current version from package.json file
  * @param packageJsonPath - Path to package.json
+ * @param fileService - Optional file service for dependency injection
  * @returns The version string
  * @throws Error if file cannot be read or parsed
  */
-export async function getCurrentVersion(packageJsonPath: string): Promise<string> {
-    try {
-        const content = fs.readFileSync(packageJsonPath, 'utf8');
-        return parsePackageJson(content);
-    } catch (error: unknown) {
-        throw new Error(
-            `Failed to read version from ${packageJsonPath}: ${String(error)}`,
-            { cause: error }
-        );
-    }
+export async function getCurrentVersion(
+    packageJsonPath: string,
+    fileService: IFileService = defaultFileService
+): Promise<string> {
+    const content = fileService.readFile(packageJsonPath);
+    return parsePackageJson(content);
 }
 
 /**
