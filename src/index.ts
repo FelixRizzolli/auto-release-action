@@ -1,7 +1,7 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
-import { getCurrentVersion, extractVersionFromTag } from './version';
-import { extractChangelog } from './changelog';
+import { parsePackageJson, extractVersionFromTag } from './parsers/package-json.parser';
+import { parseChangelogContent } from './parsers/changelog.parser';
 import { buildTagName, isBlank } from './utils';
 import { GitService } from './services/git.service';
 import { FileService } from './services/file.service';
@@ -139,7 +139,8 @@ async function run(): Promise<void> {
         }
 
         // Get current version from package.json
-        const currentVersion = await getCurrentVersion(config.packageJsonPath);
+        const packageContent = fileService.readFile(config.packageJsonPath);
+        const currentVersion = parsePackageJson(packageContent);
         if (isBlank(currentVersion)) {
             core.setFailed('No version found in package.json');
             return;
@@ -187,7 +188,20 @@ async function run(): Promise<void> {
 
         // Extract changelog for this version
         core.info(`📖 Extracting changelog for version ${currentVersion}...`);
-        const rawChangelogContent = extractChangelog(config.changelogPath, currentVersion);
+        
+        let rawChangelogContent = '';
+        if (fileService.fileExists(config.changelogPath)) {
+            const changelogFileContent = fileService.readFile(config.changelogPath);
+            rawChangelogContent = parseChangelogContent(changelogFileContent, currentVersion);
+            
+            if (isBlank(rawChangelogContent)) {
+                const versionClean = currentVersion.replace(/^v/, '');
+                core.warning(`Version ${versionClean} not found in ${config.changelogPath}`);
+            }
+        } else {
+            core.warning(`CHANGELOG.md not found at ${config.changelogPath}`);
+        }
+        
         const changelogContent = getChangelogWithFallback(rawChangelogContent, currentVersion);
 
         if (isBlank(rawChangelogContent)) {
