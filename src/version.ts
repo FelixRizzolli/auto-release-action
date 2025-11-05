@@ -40,6 +40,7 @@ export function parseGitTags(output: string): string[] {
     return output
         .trim()
         .split('\n')
+        .map((tag) => tag.trim())
         .filter((tag) => tag.length > 0);
 }
 

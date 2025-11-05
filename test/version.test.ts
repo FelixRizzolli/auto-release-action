@@ -94,14 +94,12 @@ describe('parseGitTags', () => {
         expect(result).toEqual(['v1.2.3', 'v1.2.2', 'v1.2.1']);
     });
 
-    it('should handle tags with leading/trailing whitespace in lines', () => {
+    it('should trim whitespace around tags', () => {
         const output = '  v1.2.3  \n  v1.2.2  \n';
 
         const result = parseGitTags(output);
 
-        // The function trims the whole output but doesn't trim individual lines
-        // Git output typically doesn't have this, but handle it gracefully
-        expect(result).toEqual(['v1.2.3  ', '  v1.2.2']);
+        expect(result).toEqual(['v1.2.3', 'v1.2.2']);
     });
 
     it('should handle tags without prefix', () => {

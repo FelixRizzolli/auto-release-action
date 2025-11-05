@@ -3,6 +3,7 @@ import * as github from '@actions/github';
 import * as fs from 'fs';
 import { getCurrentVersion, getLatestVersionTag, tagExists, extractVersionFromTag, createGitTag } from './version';
 import { extractChangelog } from './changelog';
+import { buildTagName, isBlank } from './utils';
 
 /**
  * Result of determining whether to create a release (pure business logic)
@@ -29,7 +30,7 @@ export function determineReleaseDecision(
     tagPrefix: string,
     tagAlreadyExists: boolean,
 ): ReleaseDecision {
-    const newTagName = `${tagPrefix}${currentVersion}`;
+    const newTagName = buildTagName(tagPrefix, currentVersion);
 
     // First release - no previous tags
     if (!latestTag) {
@@ -112,7 +113,7 @@ async function run(): Promise<void> {
 
         // Get current version from package.json
         const currentVersion = await getCurrentVersion(packageJsonPath);
-        if (!currentVersion) {
+        if (isBlank(currentVersion)) {
             core.setFailed('No version found in package.json');
             return;
         }
@@ -123,14 +124,14 @@ async function run(): Promise<void> {
         const latestTag = await getLatestVersionTag(tagPrefix);
 
         // Check if the new tag already exists
-        const newTagName = `${tagPrefix}${currentVersion}`;
+        const newTagName = buildTagName(tagPrefix, currentVersion);
         const tagAlreadyExists = await tagExists(newTagName);
 
         // Determine if we should create a release (pure business logic)
         const decision = determineReleaseDecision(currentVersion, latestTag, tagPrefix, tagAlreadyExists);
 
         // Log decision details
-        if (!latestTag) {
+        if (isBlank(latestTag)) {
             core.info('🎉 No previous tags found, this will be the first release!');
         } else if (decision.latestVersion) {
             core.info(`🔖 Latest tagged version: ${decision.latestVersion}`);
@@ -161,7 +162,7 @@ async function run(): Promise<void> {
         const rawChangelogContent = extractChangelog(changelogPath, currentVersion);
         const changelogContent = getChangelogWithFallback(rawChangelogContent, currentVersion);
 
-        if (!rawChangelogContent) {
+        if (isBlank(rawChangelogContent)) {
             core.warning('No changelog content found, using default message');
         }
 

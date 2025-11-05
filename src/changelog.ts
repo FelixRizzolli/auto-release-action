@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import * as core from '@actions/core';
+import { replaceTabs, trimEmptyEdges, isBlank } from './utils';
 
 /**
  * Parse changelog content for a specific version (pure function)
@@ -38,16 +39,11 @@ export function parseChangelogContent(content: string, version: string): string 
         changelogContent = lines.slice(startLineIndex + 1, nextHeaderIndex);
     }
 
-    // Trim leading and trailing blank lines
-    while (changelogContent.length > 0 && !changelogContent[0].trim()) {
-        changelogContent.shift();
-    }
-    while (changelogContent.length > 0 && !changelogContent[changelogContent.length - 1].trim()) {
-        changelogContent.pop();
-    }
+    // Trim leading and trailing blank lines using helper
+    changelogContent = trimEmptyEdges(changelogContent);
 
-    // Convert all tabs to spaces (4 spaces per tab)
-    const result = changelogContent.map((line) => line.replace(/\t/g, '    ')).join('\n');
+    // Convert all tabs to spaces (4 spaces per tab) using helper
+    const result = changelogContent.map((line) => replaceTabs(line, 4)).join('\n');
 
     return result;
 }
@@ -67,7 +63,7 @@ export function extractChangelog(changelogPath: string, version: string): string
     const content = fs.readFileSync(changelogPath, 'utf8');
     const result = parseChangelogContent(content, version);
 
-    if (!result) {
+    if (isBlank(result)) {
         const versionClean = version.replace(/^v/, '');
         core.warning(`Version ${versionClean} not found in ${changelogPath}`);
     }
