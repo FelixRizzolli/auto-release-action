@@ -1,9 +1,10 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
 import * as fs from 'fs';
-import { getCurrentVersion, getLatestVersionTag, tagExists, extractVersionFromTag, createGitTag } from './version';
+import { getCurrentVersion, extractVersionFromTag } from './version';
 import { extractChangelog } from './changelog';
 import { buildTagName, isBlank } from './utils';
+import { GitService } from './services/git.service';
 
 /**
  * Configuration for the release action
@@ -127,6 +128,9 @@ async function run(): Promise<void> {
         const context = github.context;
         const octokit = github.getOctokit(config.githubToken);
 
+        // Initialize git service
+        const gitService = new GitService();
+
         // Check if package.json exists
         if (!fs.existsSync(config.packageJsonPath)) {
             core.setFailed(`package.json not found at: ${config.packageJsonPath}`);
@@ -143,11 +147,12 @@ async function run(): Promise<void> {
         core.info(`📌 Current version: ${currentVersion}`);
 
         // Get the latest version tag
-        const latestTag = await getLatestVersionTag(config.tagPrefix);
+        const tags = await gitService.getTags(config.tagPrefix);
+        const latestTag = tags.length > 0 ? tags[0] : null;
 
         // Check if the new tag already exists
         const newTagName = buildTagName(config.tagPrefix, currentVersion);
-        const tagAlreadyExists = await tagExists(newTagName);
+        const tagAlreadyExists = await gitService.tagExists(newTagName);
 
         // Determine if we should create a release (pure business logic)
         const decision = determineReleaseDecision(currentVersion, latestTag, config.tagPrefix, tagAlreadyExists);
@@ -190,7 +195,7 @@ async function run(): Promise<void> {
 
         // Create git tag
         core.info(`🏷️  Creating tag: ${decision.newTagName}`);
-        await createGitTag(decision.newTagName, `Release ${decision.newTagName}`);
+        await gitService.createTag(decision.newTagName, `Release ${decision.newTagName}`);
 
         // Create GitHub release
         core.info('🎊 Creating GitHub release...');

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parsePackageJson, parseGitTags, extractVersionFromTag } from '../src/version';
+import { parsePackageJson, extractVersionFromTag } from '../src/version';
 
 describe('parsePackageJson', () => {
     it('should extract version from valid package.json', () => {
@@ -50,64 +50,6 @@ describe('parsePackageJson', () => {
         const result = parsePackageJson(content);
 
         expect(result).toBe('2.0.0-beta.1');
-    });
-});
-
-describe('parseGitTags', () => {
-    it('should parse multiple tags from git output', () => {
-        const output = 'v1.2.3\nv1.2.2\nv1.2.1\n';
-
-        const result = parseGitTags(output);
-
-        expect(result).toEqual(['v1.2.3', 'v1.2.2', 'v1.2.1']);
-    });
-
-    it('should handle single tag', () => {
-        const output = 'v1.0.0\n';
-
-        const result = parseGitTags(output);
-
-        expect(result).toEqual(['v1.0.0']);
-    });
-
-    it('should return empty array for empty output', () => {
-        const output = '';
-
-        const result = parseGitTags(output);
-
-        expect(result).toEqual([]);
-    });
-
-    it('should handle output with only whitespace', () => {
-        const output = '   \n  \n  ';
-
-        const result = parseGitTags(output);
-
-        expect(result).toEqual([]);
-    });
-
-    it('should filter out empty lines', () => {
-        const output = 'v1.2.3\n\nv1.2.2\n\n\nv1.2.1\n';
-
-        const result = parseGitTags(output);
-
-        expect(result).toEqual(['v1.2.3', 'v1.2.2', 'v1.2.1']);
-    });
-
-    it('should trim whitespace around tags', () => {
-        const output = '  v1.2.3  \n  v1.2.2  \n';
-
-        const result = parseGitTags(output);
-
-        expect(result).toEqual(['v1.2.3', 'v1.2.2']);
-    });
-
-    it('should handle tags without prefix', () => {
-        const output = '1.0.0\n0.9.0\n0.8.0\n';
-
-        const result = parseGitTags(output);
-
-        expect(result).toEqual(['1.0.0', '0.9.0', '0.8.0']);
     });
 });
 
