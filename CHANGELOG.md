@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] - 2025-11-05
+
+### Fixed
+
+- Restored the action runtime bundle by removing `dist/` from `.gitignore` and updating the release workflow to build and commit the generated `dist/` directory on release. Without the built `dist/` the action's runtime entrypoint was missing and consumers referencing a tag failed to run the action.
+
 ## [1.1.0] - 2025-11-05
 
 ### Added
