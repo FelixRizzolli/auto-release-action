@@ -1,6 +1,5 @@
 # outputs
 lib
-dist
 node-compile-cache
 
 # Test coverage
