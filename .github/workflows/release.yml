@@ -34,7 +34,10 @@ jobs:
               run: pnpm install
 
             - name: Build action
-              run: pnpm run build
+              run: pnpm build
+
+            - name: Format action
+              run: pnpm format
 
             - name: Commit built dist
               run: |
