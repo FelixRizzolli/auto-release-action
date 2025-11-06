@@ -2,6 +2,12 @@
     "name": "auto-release-action",
     "version": "1.1.1",
     "description": "GitHub Action for automated releases",
+    "author": {
+        "name": "Felix Rizzolli",
+        "email": "felix.rizzolli@outlook.de",
+        "url": "https://github.com/FelixRizzolli"
+    },
+    "license": "MIT",
     "main": "dist/index.js",
     "scripts": {
         "build": "tsc && ncc build lib/index.js -o dist --source-map --license licenses.txt",
@@ -19,8 +25,6 @@
         "release",
         "automation"
     ],
-    "author": "",
-    "license": "ISC",
     "packageManager": "pnpm@10.18.3",
     "dependencies": {
         "@actions/core": "^1.11.1",
